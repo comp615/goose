@@ -158,6 +158,7 @@ export function useChatSession({
         currentSnapshot.chatState === ChatState.Streaming ||
         currentSnapshot.chatState === ChatState.Thinking ||
         currentSnapshot.chatState === ChatState.Compacting ||
+        currentSnapshot.activeRunId !== null ||
         currentSnapshot.pendingCancelPromptAttemptId !== null
       ) {
         return;
