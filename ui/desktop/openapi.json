@@ -3361,6 +3361,14 @@
           "$ref": "#/components/schemas/Message"
         }
       },
+      "CostSource": {
+        "type": "string",
+        "description": "How the `cost` on a usage record was determined.",
+        "enum": [
+          "provider_reported",
+          "estimated"
+        ]
+      },
       "CreateCustomProviderResponse": {
         "type": "object",
         "required": [
@@ -3929,7 +3937,7 @@
           },
           "primary": {
             "type": "boolean",
-            "description": "When true, the field is shown prominently in the UI (not collapsed).\nDefaults to the value of `required` if not specified.",
+            "description": "Defaults to the value of `required` if not specified.\nUIs may use this to feature this config value more prominently.",
             "nullable": true
           },
           "required": {
@@ -5116,9 +5124,78 @@
             "type": "boolean",
             "description": "Whether this message is a steer injected into an active run. UI-only:\nsurfaced as `_meta.goose.steer` so clients can mark the steer boundary\nwithout matching user-visible text. Never sent to providers."
           },
+          "usage": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MessageUsage"
+              }
+            ],
+            "nullable": true
+          },
           "userVisible": {
             "type": "boolean",
             "description": "Whether the message should be visible to the user in the UI"
+          }
+        }
+      },
+      "MessageUsage": {
+        "type": "object",
+        "description": "Token usage and cost recorded for a single message (typically an assistant\nturn). Session totals are aggregated on the fly from these records.",
+        "properties": {
+          "cacheReadTokens": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "cacheWriteTokens": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "cost": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "costSource": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CostSource"
+              }
+            ],
+            "nullable": true
+          },
+          "elapsedMs": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Wall-clock generation time, used by the client for a tokens/sec readout.",
+            "nullable": true,
+            "minimum": 0
+          },
+          "inputTokens": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "isCompaction": {
+            "type": "boolean",
+            "description": "True when this usage is from a compaction/summarization call rather than\na normal turn. Aggregation counts it; the client can badge it."
+          },
+          "outputTokens": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "timeToFirstTokenMs": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true,
+            "minimum": 0
+          },
+          "totalTokens": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
           }
         }
       },
@@ -6487,6 +6564,11 @@
           },
           "name": {
             "type": "string"
+          },
+          "parent_session_id": {
+            "type": "string",
+            "description": "For sub-agent sessions, the session that spawned them. Sessions stay\ndistinct; this link lets aggregation roll a session tree into a grand\ntotal without merging records.",
+            "nullable": true
           },
           "project_id": {
             "type": "string",
